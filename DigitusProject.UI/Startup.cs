@@ -11,6 +11,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using RabbitMQ.Client;
 using System;
+using DigitusProject.WebUI.Services.Hubs;
 
 namespace DigitusProject.WebUI
 {
@@ -96,6 +97,8 @@ namespace DigitusProject.WebUI
 
             app.UseEndpoints(endpoints =>
             {
+                endpoints.MapHub<MyHub>("/MyHub");
+
                 endpoints.MapControllerRoute(
                     name: "default",
                     pattern: "{controller=Home}/{action=Index}/{id?}");

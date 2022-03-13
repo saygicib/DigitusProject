@@ -13,7 +13,7 @@
         }
         <form asp-controller="Account" asp-action="Login" method="post">
             <div asp-validation-summary="All" class="text-danger"></div>
-            <input type="hidden" name="ReturnUrl" value="@Model.ReturnUrl" />
+            <input type="hidden" name="ReturnUrl" value="@Model.ReturnUrl"/>
             <div class="form-group row">
                 <label asp-for="Email" class="col-md-2 col-form-label">Email</label>
                 <div class="col-md-10">

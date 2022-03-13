@@ -5,6 +5,8 @@ using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
 using DigitusProject.WebUI.Extensions;
 using DigitusProject.WebUI.Services.RabbitMQ;
+using Microsoft.AspNetCore.SignalR;
+using DigitusProject.WebUI.Services.Hubs;
 
 namespace DigitusProject.WebUI.Controllers
 {
@@ -14,12 +16,14 @@ namespace DigitusProject.WebUI.Controllers
         private readonly UserManager<User> _userManager;
         private readonly SignInManager<User> _signInManager;
         private readonly RabbitMQPublisher _rabbitMQPublisher;
+        private readonly IHubContext<MyHub> _hubContext;
 
-        public AccountController(UserManager<User> userManager, SignInManager<User> signInManager, RabbitMQPublisher rabbitMQPublisher)
+        public AccountController(UserManager<User> userManager, SignInManager<User> signInManager, RabbitMQPublisher rabbitMQPublisher, IHubContext<MyHub> hubContext)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _rabbitMQPublisher = rabbitMQPublisher;
+            _hubContext = hubContext;
         }
         public IActionResult Register()
         {
@@ -85,9 +89,10 @@ namespace DigitusProject.WebUI.Controllers
             }
 
 
-            var result = await _signInManager.PasswordSignInAsync(user, dto.Password, true/*Beni hatırla*/, false);
+            var result = await _signInManager.PasswordSignInAsync(user, dto.Password, true, false);
             if (result.Succeeded)
             {
+                await _hubContext.Clients.User(user.Id).SendAsync("IsOnline");
                 return Redirect(dto.ReturnUrl ?? "~/");
             }
             TempData.Put("message", new ResultMessage() { Title = "Error", Message = "Email or password error.", Css = "danger" });
@@ -97,7 +102,6 @@ namespace DigitusProject.WebUI.Controllers
         public async Task<IActionResult> Logout()
         {
             await _signInManager.SignOutAsync();
-
             TempData.Put("message", new ResultMessage() { Title = "Session Closed.", Message = "The session was securely closed.", Css = "warning" });
 
             return Redirect("~/");
