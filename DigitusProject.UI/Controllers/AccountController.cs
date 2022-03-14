@@ -163,7 +163,6 @@ namespace DigitusProject.WebUI.Controllers
                 token = token
             });
 
-            //sendmailRabbitMQ
             _rabbitMQPublisher.Publish(new UserSendedMail() { Email = email, MessageTitle = "Reset Password", MessageBody = $"<a href='http://localhost:2822{callBackUrl}'>Click</a> the link for reset password." });
 
             TempData.Put("message", new ResultMessage() { Title = "Forgot Password", Message = "Sended mail for reset password", Css = "danger" });

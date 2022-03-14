@@ -11,6 +11,7 @@ using DigitusProject.WebUI.Identity;
 
 namespace DigitusProject.WebUI.Controllers
 {
+    [Authorize(Roles = "admin")]
     public class AdminController : Controller
     {
         private readonly ApplicationIdentityDbContext _context;
