@@ -3,6 +3,9 @@
     ViewData["Title"] = "Login";
 }
 
+<br />
+<br />
+<br />
 <h1>Login</h1>
 <hr />
 <div class="row">
@@ -13,7 +16,7 @@
         }
         <form asp-controller="Account" asp-action="Login" method="post">
             <div asp-validation-summary="All" class="text-danger"></div>
-            <input type="hidden" name="ReturnUrl" value="@Model.ReturnUrl"/>
+            <input type="hidden" name="ReturnUrl" value="@Model.ReturnUrl" />
             <div class="form-group row">
                 <label asp-for="Email" class="col-md-2 col-form-label">Email</label>
                 <div class="col-md-10">
@@ -31,7 +34,8 @@
             <div class="form-group row">
                 <div class="col-md-10 offset-md-2">
                     <button type="submit" class="btn btn-primary">Login</button>
-                    <a href="/account/forgotpassword" class="btn btn-primary">Forgot Password
+                    <a href="/account/forgotpassword" class="btn btn-primary">
+                        Forgot Password
                     </a>
                 </div>
             </div>

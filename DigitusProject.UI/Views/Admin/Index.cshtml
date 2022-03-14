@@ -1,0 +1,27 @@
+﻿@model AboutToUserModel
+@{
+    ViewData["Title"] = "Index";
+}
+<br />
+<br />
+<br />
+<h1>About To Users</h1>
+<hr />
+
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Number Of Online Users</th>
+            <th>New Registered User</th>
+            <th>Sent Verification Code But Not Confirmed</th>
+            <th>Avarage Recording Time</th>
+        </tr>
+        <tr>
+            <td>@Model.NumberOfOnlineUsers</td>
+            <td>@Model.NewRegisteredUser</td>
+            <td>@Model.SentVerificationCodeButNotConfirmed</td>
+            <td>@Model.AvarageRecordingTime</td>
+        </tr>
+    </thead>
+</table>

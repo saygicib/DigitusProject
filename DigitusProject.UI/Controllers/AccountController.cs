@@ -7,50 +7,59 @@ using DigitusProject.WebUI.Extensions;
 using DigitusProject.WebUI.Services.RabbitMQ;
 using Microsoft.AspNetCore.SignalR;
 using DigitusProject.WebUI.Services.Hubs;
+using System.Linq;
 
 namespace DigitusProject.WebUI.Controllers
 {
     [AutoValidateAntiforgeryToken]
     public class AccountController : Controller
     {
+        private readonly ApplicationIdentityDbContext _context;
         private readonly UserManager<User> _userManager;
         private readonly SignInManager<User> _signInManager;
         private readonly RabbitMQPublisher _rabbitMQPublisher;
         private readonly IHubContext<MyHub> _hubContext;
 
-        public AccountController(UserManager<User> userManager, SignInManager<User> signInManager, RabbitMQPublisher rabbitMQPublisher, IHubContext<MyHub> hubContext)
+        public AccountController(UserManager<User> userManager, SignInManager<User> signInManager, RabbitMQPublisher rabbitMQPublisher, IHubContext<MyHub> hubContext, ApplicationIdentityDbContext context)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _rabbitMQPublisher = rabbitMQPublisher;
             _hubContext = hubContext;
+            _context = context;
         }
         public IActionResult Register()
         {
             return View(new RegisterModel());
         }
         [HttpPost]
-        public async Task<IActionResult> Register(RegisterModel dto)
+        public async Task<IActionResult> Register(RegisterModel model)
         {
             if (!ModelState.IsValid)
             {
-                return View(dto);
+                return View(model);
             }
             var user = new User
             {
-                Name = dto.Name,
-                Surname = dto.Surname,
-                Email = dto.Email
-            };
-
-            var result = await _userManager.CreateAsync(user, dto.Password);
+                Name = model.Name,
+                Surname = model.Surname,
+                UserName = model.Email,
+                Email = model.Email
+            };            
+            var result = await _userManager.CreateAsync(user, model.Password);            
             if (result.Succeeded)
             {
-                //token
+                var aboutToUser = new AboutTheUser
+                {
+                    UserId = user.Id,
+                    EmailSentDate = System.DateTime.Now
+                };
+                await _context.AboutTheUsers.AddAsync(aboutToUser);
+                _context.SaveChanges();
                 var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-                var callBackUrl = Url.Action("ConfirmEmail", "Account", new { userId = user.Id, token = token });//RabbitMQ ile kullanıcıya email olarak gidecek.
+                var callBackUrl = Url.Action("ConfirmEmail", "Account", new { userId = user.Id, token = token });
 
-                _rabbitMQPublisher.Publish(new UserSendedMail() { Email = dto.Email, MessageTitle = "Confirm your email", MessageBody = $"<a href='http://localhost:6855{callBackUrl}'>Click</a> the link to confirm your email account." });
+                _rabbitMQPublisher.Publish(new UserSendedMail() { Email = model.Email, MessageTitle = "Confirm your email", MessageBody = $"<a href='http://localhost:2822{callBackUrl}'>Click</a> the link to confirm your email account." });
 
                 TempData.Put("message", new ResultMessage() { Title = "Confirm your email", Message = "Click the link to confirm your email account.", Css = "warning" });
 
@@ -58,7 +67,7 @@ namespace DigitusProject.WebUI.Controllers
             }
 
             TempData.Put("message", new ResultMessage() { Title = "Exists", Message = "This email or username exists", Css = "warning" });
-            return View(dto);
+            return View(model);
         }
         [HttpGet]
         public IActionResult Login(string returnUrl = null)
@@ -69,35 +78,35 @@ namespace DigitusProject.WebUI.Controllers
             });
         }
         [HttpPost]
-        public async Task<IActionResult> Login(LoginModel dto)
+        public async Task<IActionResult> Login(LoginModel model)
         {
             if (!ModelState.IsValid)
             {
-                return View(dto);
+                return View(model);
             }
-            var user = await _userManager.FindByEmailAsync(dto.Email);
+            var user = await _userManager.FindByEmailAsync(model.Email);
             if (user == null)
             {
                 TempData.Put("message", new ResultMessage() { Title = "Not Found", Message = "User Not Found", Css = "warning" });
-                return View(dto);
+                return View(model);
             }
 
             if (!await _userManager.IsEmailConfirmedAsync(user))
             {
                 TempData.Put("message", new ResultMessage() { Title = "Confirm your account", Message = "Account confirmation required.", Css = "warning" });
-                return View(dto);
+                return View(model);
             }
 
 
-            var result = await _signInManager.PasswordSignInAsync(user, dto.Password, true, false);
+            var result = await _signInManager.PasswordSignInAsync(user, model.Password, true, false);
             if (result.Succeeded)
             {
                 await _hubContext.Clients.User(user.Id).SendAsync("IsOnline");
-                return Redirect(dto.ReturnUrl ?? "~/");
+                return Redirect(model.ReturnUrl ?? "~/");
             }
             TempData.Put("message", new ResultMessage() { Title = "Error", Message = "Email or password error.", Css = "danger" });
 
-            return View(dto);
+            return View(model);
         }
         public async Task<IActionResult> Logout()
         {
@@ -119,6 +128,10 @@ namespace DigitusProject.WebUI.Controllers
                 var result = await _userManager.ConfirmEmailAsync(user, token);
                 if (result.Succeeded)
                 {
+                    var aboutToUser = _context.AboutTheUsers.FirstOrDefault(x => x.UserId == userId);
+                    aboutToUser.AccountConfirmationDate = System.DateTime.Now;
+                    _context.AboutTheUsers.Update(aboutToUser);
+                    _context.SaveChanges();
                     TempData.Put("message", new ResultMessage() { Title = "Account Confirmation.", Message = "Your account has been successfully approved", Css = "success" });
                     return RedirectToAction("Login");
                 }
@@ -151,7 +164,7 @@ namespace DigitusProject.WebUI.Controllers
             });
 
             //sendmailRabbitMQ
-            _rabbitMQPublisher.Publish(new UserSendedMail() { Email = email, MessageTitle = "Reset Password", MessageBody = $"<a href='http://localhost:6855{callBackUrl}'>Click</a> the link for reset password." });
+            _rabbitMQPublisher.Publish(new UserSendedMail() { Email = email, MessageTitle = "Reset Password", MessageBody = $"<a href='http://localhost:2822{callBackUrl}'>Click</a> the link for reset password." });
 
             TempData.Put("message", new ResultMessage() { Title = "Forgot Password", Message = "Sended mail for reset password", Css = "danger" });
 

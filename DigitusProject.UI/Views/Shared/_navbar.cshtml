@@ -3,32 +3,17 @@
         <a class="navbar-brand" href="/">Digitus Project</a>
         <ul class="navbar-nav mr-auto">
             @if (User.Identity.IsAuthenticated)//Kullanıcı uygulamaya login olmuşsa
-            {
-                @*<li class="nav-item">
-                <a asp-controller="Cart" asp-action="Index" class="nav-link">Cart</a>
-            </li>
-            <li class="nav-item">
-                <a asp-controller="Cart" asp-action="GetOrders" class="nav-link">Orders</a>
-            </li>*@
+            {                
                 @if (User.IsInRole("admin"))
                 {
-                    @*<li class="nav-item">
-                    <a asp-controller="Admin" asp-action="AddProduct" class="nav-link">Add Product</a>
+                    <li class="nav-item">
+                    <a asp-controller="Admin" asp-action="Index" class="nav-link">User List</a>
                 </li>
-                <li class="nav-item">
-                    <a asp-controller="Admin" asp-action="ProductList" class="nav-link">Admin Products</a>
-                </li>
-                <li class="nav-item">
-                    <a asp-controller="Admin" asp-action="AddCategory" class="nav-link">Add Category</a>
-                </li>
-                <li class="nav-item">
-                    <a asp-controller="Admin" asp-action="CategoryList" class="nav-link">Admin Categories</a>
-                </li>*@
                 }
             }
         </ul>
         <ul class="navbar-nav ml-auto">
-            @if (User.Identity.IsAuthenticated)//Kullanıcı uygulamaya login olmuşsa
+            @if (User.Identity.IsAuthenticated)
             {
                 <li class="nav-item">
                     <a asp-controller="Account" asp-action="Profile" class="nav-link">@User.Identity.Name</a>

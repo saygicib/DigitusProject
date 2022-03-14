@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+﻿using DigitusProject.WebUI.Models;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -13,5 +14,6 @@ namespace DigitusProject.WebUI.Identity
         {
 
         }
+        public DbSet<AboutTheUser> AboutTheUsers { get; set; }
     }
 }
