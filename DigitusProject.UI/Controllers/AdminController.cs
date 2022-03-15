@@ -46,7 +46,7 @@ namespace DigitusProject.WebUI.Controllers
         public int SentVerificationCodeButNotConfirmed()
         {
             int count=0;
-            return count = _context.AboutTheUsers.Count(x => (x.AccountConfirmationDate > x.EmailSentDate.AddDays(1)) || (x.AccountConfirmationDate==null && x.EmailSentDate.AddDays(1) > DateTime.Now));
+            return count = _context.AboutTheUsers.Count(x => (x.AccountConfirmationDate==null && x.EmailSentDate.AddDays(1) > DateTime.Now));
         }
         public int AvarageRecordingTime()
         {
